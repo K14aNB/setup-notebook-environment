@@ -7,5 +7,5 @@ setup(
     author_email='kirnid4@gmail.com',
     description='Python script to perform Google Colab/Jupyter Notebook environment setup tasks',
     packages=find_packages(),
-    install_requires=['download_kaggle_dataset']
+    install_requires=['git+https://github.com/K14aNB/download-kaggle-dataset.git@main']
     )
