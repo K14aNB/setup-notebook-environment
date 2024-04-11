@@ -132,5 +132,5 @@ def setup(repo_path:str,nb_name:str):
         # This jupytext config file is essential for clearing cell metadata added by colab
         try:
             run(['jupytext','--opt', 'cell_metadata_filter=-all',py_filename],check=True)
-        except CalledProce:
-            print(f'{e2.cmd} failed')
+        except CalledProcessError as e4:
+            print(f'{e4.cmd} failed')
