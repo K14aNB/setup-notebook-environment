@@ -6,7 +6,7 @@ build-backend = 'setuptools.build_meta'
 name = 'env_setup'
 version = '0.1.0'
 description = 'Python script to perform Google Colab/Jupyter Notebook environment setup tasks'
-authors = 'K14aNB'
+authors = [{name='K14aNB',email='kirnid4@gmail.com'}]
 license = {text = 'Apache-2.0 license'}
 readme = 'README.md'
 dependencies = [ 'download_kaggle_dataset @ https://github.com/K14aNB/download-kaggle-dataset.git>=0.1.0']
