@@ -7,7 +7,7 @@ name = 'env_setup'
 version = '0.1.0'
 description = 'Python script to perform Google Colab/Jupyter Notebook environment setup tasks'
 authors = 'K14aNB'
-license = 'Apache-2.0 license'
+license = 'Apache-2.0'
 readme = 'README.md'
 requires-python = '>=3.7'
 
