@@ -16,7 +16,10 @@ def setup(repo_path:str,nb_name:str):
     repo_path:str : Local git repository name which will be joined with its absolute path 
                     depending on the environment type.
     nb_name:str : Currently active Colab/Jupyter Notebook 
-    Returns: None
+
+    Returns: tuple(runtime,result_path) 
+             where runtime is either 'colab' or 'jupyter' or 'python-script' and 
+             result_path is the directory where data is downloaded
     '''
     # Check if OS is 'Linux', 'Windows' or 'OSX'
     if platform.system()=='Linux':
@@ -79,6 +82,7 @@ def setup(repo_path:str,nb_name:str):
     nb_outputs=outputs.get(nb_name)
 
     # Set up Data
+    result_path=''
     if data_src_type=='kaggle-datasets':
         http = PoolManager()
         kaggle_response = http.request('GET','https://gist.githubusercontent.com/K14aNB/c2e72aa3d250e421f89fdf232913d4ff/raw/')
@@ -87,12 +91,12 @@ def setup(repo_path:str,nb_name:str):
             if os.path.isdir('/content/data') is False:
                 if kaggle_response.status==200:
                     exec(kaggle_response.data.decode('utf-8'),namespace)
-                    namespace['download'](data_src_path=data_src_path,colab=True)               
-        elif runtime=='local':
+                    result_path=namespace['download'](data_src_path=data_src_path,colab=True)               
+        elif runtime in ['jupyter','python-script']:
             if os.path.isdir(os.path.join(repo_abs_path,'data')) is False:
                 if kaggle_response.status==200:
                     exec(kaggle_response.data.decode('utf-8'),namespace)
-                    namespace['download'](data_src_path=data_src_path,colab=False,repo_path=repo_abs_path)
+                    result_path=namespace['download'](data_src_path=data_src_path,colab=False,repo_path=repo_abs_path)
     elif data_src_type=='direct-download':
         http = PoolManager()
         download_response = http.request('GET',data_src_path)
@@ -105,7 +109,8 @@ def setup(repo_path:str,nb_name:str):
                 if os.listdir('/content/data')[0].endswith('.zip') is True:
                     with ZipFile(os.path.join('/content','data',os.listdir('/content/data')[0]),'r') as zip:
                         zip.extractall(path=os.path.join('/content','data'))
-        else:
+            result_path='/content/data'
+        elif runtime in ['jupyter','python-script']:
             if os.path.isdir(os.path.join(repo_abs_path,'data')) is False:
                 os.mkdir(os.path.join(repo_abs_path,'data'))
                 if download_response.status==200:
@@ -114,6 +119,7 @@ def setup(repo_path:str,nb_name:str):
                 if os.listdir(os.path.join(repo_abs_path,'data'))[0].endswith('.zip') is True:
                     with ZipFile(os.path.join(repo_abs_path,'data',os.listdir(os.path.join(repo_abs_path,'data')[0])),'r') as zip:
                         zip.extractall(path=os.path.join(repo_abs_path,'data'))
+            result_path=os.path.join(repo_abs_path,'data')
 
    # Handling Outputs
 
@@ -140,7 +146,7 @@ def setup(repo_path:str,nb_name:str):
         except CalledProcessError as e3:
             print(f'{e3.cmd} failed')
 
-#         if runtime=='colab':
+        #if runtime=='colab':
         py_filename = os.path.join(parent_path,'Data Science','Git Repos',nb_outputs.get('output-path'),nb_name+'.py')
         # Check if jupytext config file does not exist in colab VM, create it.
         # This jupytext config file is essential for clearing cell metadata added by colab
@@ -148,3 +154,5 @@ def setup(repo_path:str,nb_name:str):
             run(['jupytext','--opt', 'cell_metadata_filter=-all',py_filename],check=True)
         except CalledProcessError as e4:
             print(f'{e4.cmd} failed')
+    return runtime, result_path
+    
