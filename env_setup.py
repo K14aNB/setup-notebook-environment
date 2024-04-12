@@ -28,21 +28,35 @@ def setup(repo_path:str,nb_name:str):
        
     
     # Check if Google Colab runtime or Local Runtime is currently active
-    if 'google.colab' in sys.modules:
-        runtime='colab'
-    else:
-        runtime='local'
-    
-    parent_path=''
+    try:
+        if 'google.colab' in sys.modules and get_ipython().__class__.__module__=='google.colab._shell':
+            runtime='colab'
+        elif 'google.colab' not in sys.modules and get_ipython().__class__.__module__=='ipykernel.zmqshell':
+            runtime='jupyter'
+    except NameError as ne:
+        runtime='python-script'
+        print(ne)
+        print('Currently Executing as a .py script and not as .ipynb Notebook')
+        
+        parent_path=''
 
     # Set parent path
-    # if connected to colab runtime, parent path = '/content/drive'
-    # if connected to local jupyter runtime, parent path = '/mnt..'
-    # or specific drive letter
+    # if connected to colab runtime, parent_path = '/content/drive'
+    # if connected to local jupyter runtime, parent_path = '/mnt..'
+    # else if connected to python runtime and executing a .py script, if os='linux' (chromeos), parent_path = '/mnt/chromeos/GoogleDrive/MyDrive' 
+    # else if connected to python runtime and executing a .py script, if os='linux', parent_path = '~/GDrive'
+    # else if connected to python runtime and executing a .py script, if os='linux' and Google Drive is not mounted ie. repo is located in local directory, parent_path = '~'
     if runtime=='colab':
         parent_path = '/content/drive/MyDrive'        
-    elif runtime=='local' and pltfrm in ['linux','windows']:
+    elif runtime=='jupyter' and pltfrm in ['linux','windows']:
         parent_path = os.getcwd()
+    elif runtime=='python-script' and pltfrm == 'linux':
+        if os.path.exists('/mnt/chromeos'):
+            parent_path=os.path.join('/mnt','chromeos','GoogleDrive','MyDrive')
+        elif os.path.exists(os.path.join(os.path.expanduser('~'),'GDrive'))==True:
+            parent_path=os.path.join(os.path.expanduser('~'),'GDrive')
+        else:
+            parent_path=os.path.expanduser('~')
     
     repo_abs_path = os.path.join(parent_path,'Data Science','Git Repos',repo_path)
 
