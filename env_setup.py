@@ -2,7 +2,8 @@ import os
 import platform
 from subprocess import run,CalledProcessError
 import yaml
-from urllib3 import request,PoolManager
+from urllib3 import PoolManager,request
+from download_kaggle_dataset import download
 from zipfile import ZipFile
 
 def setup(repo_path:str,nb_name:str,runtime:str,parent_path:None):
@@ -65,19 +66,12 @@ def setup(repo_path:str,nb_name:str,runtime:str,parent_path:None):
     # Set up Data
     result_path=''
     if data_src_type=='kaggle-datasets':
-        http = PoolManager()
-        kaggle_response = http.request('GET','https://gist.githubusercontent.com/K14aNB/c2e72aa3d250e421f89fdf232913d4ff/raw/')
-        namespace={}
         if runtime=='colab':
             if os.path.isdir('/content/data') is False:
-                if kaggle_response.status==200:
-                    exec(kaggle_response.data.decode('utf-8'),namespace)
-                    result_path=namespace['download'](data_src_path=data_src_path,colab=True)               
+                result_path=download(data_src_path=data_src_path,colab=True)               
         elif runtime in ['jupyter','python-script']:
             if os.path.isdir(os.path.join(repo_abs_path,'data')) is False:
-                if kaggle_response.status==200:
-                    exec(kaggle_response.data.decode('utf-8'),namespace)
-                    result_path=namespace['download'](data_src_path=data_src_path,colab=False,repo_path=repo_abs_path)
+                result_path=download(data_src_path=data_src_path,colab=False,repo_path=repo_abs_path)
     elif data_src_type=='direct-download':
         http = PoolManager()
         download_response = http.request('GET',data_src_path)
