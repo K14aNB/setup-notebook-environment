@@ -1,25 +1,23 @@
 import os
 import platform
-import sys
 from subprocess import run,CalledProcessError
 import yaml
 from urllib3 import request,PoolManager
 from zipfile import ZipFile
 
-def setup(repo_path:str,nb_name:str):
+def setup(repo_path:str,nb_name:str,runtime:str,parent_path:None):
     '''
     Python script to perform Google Colab/Jupyter Notebook environment setup tasks
     like downloading of datasets from source specified in config, 
     handling output formats (html, py:percent).
     
     Arguments:
-    repo_path:str : Local git repository name which will be joined with its absolute path 
-                    depending on the environment type.
-    nb_name:str : Currently active Colab/Jupyter Notebook 
+    repo_path:str : Local git repository name which will be joined with its parent_path,
+    nb_name:str : Currently active Colab/Jupyter Notebook
+    runtime:str : Currently active runtime type. Can be either 'colab','jupyter','python-script'
+    parent_path:str : Parent path of the git repo which will be joined with repo_path
 
-    Returns: tuple(runtime,result_path) 
-             where runtime is either 'colab' or 'jupyter' or 'python-script' and 
-             result_path is the directory where data is downloaded
+    Returns:str : result_path is the directory where data is downloaded
     '''
     # Check if OS is 'Linux', 'Windows' or 'OSX'
     if platform.system()=='Linux':
@@ -29,31 +27,14 @@ def setup(repo_path:str,nb_name:str):
     elif platform.system()=='Darwin':
         pltfrm='osx'
        
-    
-    # Check if Google Colab runtime or Local Runtime is currently active
-    try:
-        if 'google.colab' in sys.modules and get_ipython().__class__.__module__=='google.colab._shell':
-            runtime='colab'
-        elif 'google.colab' not in sys.modules and get_ipython().__class__.__module__=='ipykernel.zmqshell':
-            runtime='jupyter'
-    except NameError as ne:
-        runtime='python-script'
-        print(ne)
-        print('Currently Executing as a .py script and not as .ipynb Notebook')
-        
-        parent_path=''
 
     # Set parent path
-    # if connected to colab runtime, parent_path = '/content/drive'
+    # if connected to colab runtime, parent_path = '/content/drive/MyDrive'
     # if connected to local jupyter runtime, parent_path = '/mnt..'
     # else if connected to python runtime and executing a .py script, if os='linux' (chromeos), parent_path = '/mnt/chromeos/GoogleDrive/MyDrive' 
     # else if connected to python runtime and executing a .py script, if os='linux', parent_path = '~/GDrive'
     # else if connected to python runtime and executing a .py script, if os='linux' and Google Drive is not mounted ie. repo is located in local directory, parent_path = '~'
-    if runtime=='colab':
-        parent_path = '/content/drive/MyDrive'        
-    elif runtime=='jupyter' and pltfrm in ['linux','windows']:
-        parent_path = os.getcwd()
-    elif runtime=='python-script' and pltfrm == 'linux':
+    if runtime=='python-script' and pltfrm == 'linux':
         if os.path.exists('/mnt/chromeos'):
             parent_path=os.path.join('/mnt','chromeos','GoogleDrive','MyDrive')
         elif os.path.exists(os.path.join(os.path.expanduser('~'),'GDrive'))==True:
@@ -61,7 +42,7 @@ def setup(repo_path:str,nb_name:str):
         else:
             parent_path=os.path.expanduser('~')
     
-    repo_abs_path = os.path.join(parent_path,'Data Science','Git Repos',repo_path)
+    repo_abs_path = os.path.join(parent_path,repo_path)
 
     
     # Read the config.yaml
@@ -123,14 +104,14 @@ def setup(repo_path:str,nb_name:str):
 
    # Handling Outputs
 
-    if nb_outputs.get('nb-html-preview') == 'true':
+    if nb_outputs.get('nb-html-preview') == 'true' and runtime in ['colab','jupyter']:
         # Converting the notebook to HTML output format for preview in GitHub
         try:
-            run(['jupyter','nbconvert','--to','html',os.path.join(parent_path,'Data Science','Git Repos',nb_outputs.get('output-path'),nb_name+'.ipynb')],check=True)
+            run(['jupyter','nbconvert','--to','html',os.path.join(repo_abs_path,nb_outputs.get('output-path'),nb_name+'.ipynb')],check=True)
         except CalledProcessError as e1:
             print(f'{e1.cmd} failed')
              
-    if nb_outputs.get('py-percent-script') == 'true':
+    if nb_outputs.get('py-percent-script') == 'true' and runtime in ['colab','jupyter']:
         # Try importing jupytext. If not installed in colab VM, install the module.
         try:
             __import__('jupytext')
@@ -142,17 +123,16 @@ def setup(repo_path:str,nb_name:str):
         
         # Converting the notebook to py:percent script format
         try:
-            run(['jupytext','--to','py:percent',os.path.join(parent_path,'Data Science','Git Repos',nb_outputs.get('output-path'),nb_name+'.ipynb')],check=True)
+            run(['jupytext','--to','py:percent',os.path.join(repo_abs_path,nb_outputs.get('output-path'),nb_name+'.ipynb')],check=True)
         except CalledProcessError as e3:
             print(f'{e3.cmd} failed')
 
-        #if runtime=='colab':
-        py_filename = os.path.join(parent_path,'Data Science','Git Repos',nb_outputs.get('output-path'),nb_name+'.py')
+        py_filename = os.path.join(repo_abs_path,nb_outputs.get('output-path'),nb_name+'.py')
         # Check if jupytext config file does not exist in colab VM, create it.
         # This jupytext config file is essential for clearing cell metadata added by colab
         try:
             run(['jupytext','--opt', 'cell_metadata_filter=-all',py_filename],check=True)
         except CalledProcessError as e4:
             print(f'{e4.cmd} failed')
-    return runtime, result_path
+    return result_path
     
