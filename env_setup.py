@@ -73,11 +73,14 @@ def setup(repo_path:str,nb_name:str,runtime:str,parent_path=None):
             if os.path.isdir(os.path.join(repo_abs_path,'data')) is False:
                 result_path=download(data_src_path=data_src_path,colab=False,repo_path=repo_abs_path)
     elif data_src_type=='direct-download':
-        http = PoolManager()
-        download_response = http.request('GET',data_src_path)
+        if os.path.isfile(os.path.join('/content','data',data_src_path.split('/')[-1])) is False or \
+        os.path.isfile(os.path.join(repo_abs_path,'data',data_src_path.split('/')[-1])) is False:
+            http = PoolManager()
+            download_response=http.request('GET',data_src_path)
         if runtime=='colab':
             if os.path.isdir('/content/data') is False:
                 os.mkdir('/content/data')
+                download_response=http.request('GET',data_src_path)
                 if download_response.status==200:
                     with open('/content/data/'+data_src_path.split('/')[-1],'w') as d:
                         d.write(download_response.data.decode('utf-8'))
@@ -91,9 +94,9 @@ def setup(repo_path:str,nb_name:str,runtime:str,parent_path=None):
                 if download_response.status==200:
                     with open(os.path.join(repo_abs_path,'data',data_src.split('/')[-1]),'w') as dl:
                         dl.write(download_response.data.decode('utf-8'))
-                if os.listdir(os.path.join(repo_abs_path,'data'))[0].endswith('.zip') is True:
-                    with ZipFile(os.path.join(repo_abs_path,'data',os.listdir(os.path.join(repo_abs_path,'data')[0])),'r') as zip:
-                        zip.extractall(path=os.path.join(repo_abs_path,'data'))
+            if os.listdir(os.path.join(repo_abs_path,'data'))[0].endswith('.zip') is True:
+                with ZipFile(os.path.join(repo_abs_path,'data',os.listdir(os.path.join(repo_abs_path,'data')[0])),'r') as zip:
+                    zip.extractall(path=os.path.join(repo_abs_path,'data'))
             result_path=os.path.join(repo_abs_path,'data')
 
    # Handling Outputs
