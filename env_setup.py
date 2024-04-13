@@ -6,7 +6,7 @@ from urllib3 import PoolManager,request
 from download_kaggle_dataset import download
 from zipfile import ZipFile
 
-def setup(repo_path:str,nb_name:str,runtime:str,parent_path:None):
+def setup(repo_path:str,nb_name:str,runtime:str,parent_path=None):
     '''
     Python script to perform Google Colab/Jupyter Notebook environment setup tasks
     like downloading of datasets from source specified in config, 
