@@ -91,7 +91,7 @@ def setup(repo_path:str,nb_name:str,runtime:str,parent_path=None):
         elif runtime in ['jupyter','python-script']:
             result_path=os.path.join(repo_abs_path,'data',nb_name)
             if os.path.isdir(result_path) is False:
-                os.mkdirs(result_path)
+                os.makedirs(result_path)
             if download_response.status==200:
                 with open(os.path.join(result_path,data_src.split('/')[-1]),'w') as dl:
                     dl.write(download_response.data.decode('utf-8'))
