@@ -67,69 +67,71 @@ def setup(repo_path:str,nb_name:str,runtime:str,parent_path=None):
     result_path=''
     if data_src_type=='kaggle-datasets':
         if runtime=='colab':
-            if os.path.isdir('/content/data') is False:
+            if os.path.isdir('/content/data') is False or os.listdir(os.path.join('/content,data'))==[]:
                 result_path=download(data_src_path=data_src_path,colab=True)               
         elif runtime in ['jupyter','python-script']:
-            if os.path.isdir(os.path.join(repo_abs_path,'data')) is False:
-                result_path=download(data_src_path=data_src_path,colab=False,repo_path=repo_abs_path)
+            if os.path.isdir(os.path.join(repo_abs_path,'data',nb_name)) is False or os.listdir(os.path.join(repo_abs_path,'data',nb_name))==[]:
+                result_path=download(data_src_path=data_src_path,colab=False,repo_path=repo_abs_path,nb_name=nb_name)
     elif data_src_type=='direct-download':
         if os.path.isfile(os.path.join('/content','data',data_src_path.split('/')[-1])) is False or \
         os.path.isfile(os.path.join(repo_abs_path,'data',data_src_path.split('/')[-1])) is False:
             http = PoolManager()
             download_response=http.request('GET',data_src_path)
         if runtime=='colab':
-            if os.path.isdir('/content/data') is False:
-                os.mkdir('/content/data')
-                download_response=http.request('GET',data_src_path)
-                if download_response.status==200:
-                    with open('/content/data/'+data_src_path.split('/')[-1],'w') as d:
-                        d.write(download_response.data.decode('utf-8'))
-                if os.listdir('/content/data')[0].endswith('.zip') is True:
-                    with ZipFile(os.path.join('/content','data',os.listdir('/content/data')[0]),'r') as zip:
-                        zip.extractall(path=os.path.join('/content','data'))
             result_path='/content/data'
-        elif runtime in ['jupyter','python-script']:
-            if os.path.isdir(os.path.join(repo_abs_path,'data')) is False:
-                os.mkdir(os.path.join(repo_abs_path,'data'))
+            if os.path.isdir(result_path) is False:
+                os.mkdir(result_path)
                 if download_response.status==200:
-                    with open(os.path.join(repo_abs_path,'data',data_src.split('/')[-1]),'w') as dl:
-                        dl.write(download_response.data.decode('utf-8'))
-            if os.listdir(os.path.join(repo_abs_path,'data'))[0].endswith('.zip') is True:
-                with ZipFile(os.path.join(repo_abs_path,'data',os.listdir(os.path.join(repo_abs_path,'data')[0])),'r') as zip:
-                    zip.extractall(path=os.path.join(repo_abs_path,'data'))
-            result_path=os.path.join(repo_abs_path,'data')
+                    with open(os.path.join(result_path,data_src_path.split('/')[-1]),'w') as d:
+                        d.write(download_response.data.decode('utf-8'))
+                    if os.listdir(result_path)[0].endswith('.zip') is True:
+                        with ZipFile(os.path.join(result_path,os.listdir(result_path)[0]),'r') as zip:
+                            zip.extractall(path=result_path)
+            
+        elif runtime in ['jupyter','python-script']:
+            result_path=os.path.join(repo_abs_path,'data',nb_name)
+            if os.path.isdir(result_path) is False:
+                os.mkdirs(result_path)
+            if download_response.status==200:
+                with open(os.path.join(result_path,data_src.split('/')[-1]),'w') as dl:
+                    dl.write(download_response.data.decode('utf-8'))
+                if os.listdir(result_path)[0].endswith('.zip') is True:
+                    with ZipFile(os.path.join(result_path,os.listdir(result_path)[0]),'r') as zip:
+                        zip.extractall(path=result_path)
+
 
    # Handling Outputs
 
-    if nb_outputs.get('nb-html-preview') == 'true' and runtime in ['colab','jupyter']:
-        # Converting the notebook to HTML output format for preview in GitHub
-        try:
-            run(['jupyter','nbconvert','--to','html',os.path.join(repo_abs_path,nb_outputs.get('output-path'),nb_name+'.ipynb')],check=True)
-        except CalledProcessError as e1:
-            print(f'{e1.cmd} failed')
-             
-    if nb_outputs.get('py-percent-script') == 'true' and runtime in ['colab','jupyter']:
-        # Try importing jupytext. If not installed in colab VM, install the module.
-        try:
-            __import__('jupytext')
-        except ImportError:
+    if runtime in ['colab','jupyter']:
+        if nb_outputs.get('nb-html-preview') == 'true':
+            # Converting the notebook to HTML output format for preview in GitHub
             try:
-                run(['python','-m','pip','install','jupytext','-q'],check=True)
-            except CalledProcessError as e2:
-                print(f'{e2.cmd} failed')
-        
-        # Converting the notebook to py:percent script format
-        try:
-            run(['jupytext','--to','py:percent',os.path.join(repo_abs_path,nb_outputs.get('output-path'),nb_name+'.ipynb')],check=True)
-        except CalledProcessError as e3:
-            print(f'{e3.cmd} failed')
+                run(['jupyter','nbconvert','--to','html',os.path.join(repo_abs_path,nb_outputs.get('output-path'),nb_name+'.ipynb')],check=True)
+            except CalledProcessError as e1:
+                print(f'{e1.cmd} failed')
+                
+        if nb_outputs.get('py-percent-script') == 'true':
+            # Try importing jupytext. If not installed in colab VM, install the module.
+            try:
+                __import__('jupytext')
+            except ImportError:
+                try:
+                    run(['python','-m','pip','install','jupytext','-q'],check=True)
+                except CalledProcessError as e2:
+                    print(f'{e2.cmd} failed')
+            
+            # Converting the notebook to py:percent script format
+            try:
+                run(['jupytext','--to','py:percent',os.path.join(repo_abs_path,nb_outputs.get('output-path'),nb_name+'.ipynb')],check=True)
+            except CalledProcessError as e3:
+                print(f'{e3.cmd} failed')
 
-        py_filename = os.path.join(repo_abs_path,nb_outputs.get('output-path'),nb_name+'.py')
-        # Check if jupytext config file does not exist in colab VM, create it.
-        # This jupytext config file is essential for clearing cell metadata added by colab
-        try:
-            run(['jupytext','--opt', 'cell_metadata_filter=-all',py_filename],check=True)
-        except CalledProcessError as e4:
-            print(f'{e4.cmd} failed')
+            py_filename = os.path.join(repo_abs_path,nb_outputs.get('output-path'),nb_name+'.py')
+            # Check if jupytext config file does not exist in colab VM, create it.
+            # This jupytext config file is essential for clearing cell metadata added by colab
+            try:
+                run(['jupytext','--opt', 'cell_metadata_filter=-all',py_filename],check=True)
+            except CalledProcessError as e4:
+                print(f'{e4.cmd} failed')
     return result_path
     
