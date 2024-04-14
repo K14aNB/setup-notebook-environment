@@ -93,7 +93,7 @@ def setup(repo_path:str,nb_name:str,runtime:str,parent_path=None):
             if os.path.isdir(result_path) is False:
                 os.makedirs(result_path)
             if download_response.status==200:
-                with open(os.path.join(result_path,data_src.split('/')[-1]),'w') as dl:
+                with open(os.path.join(result_path,data_src_path.split('/')[-1]),'w') as dl:
                     dl.write(download_response.data.decode('utf-8'))
                 if os.listdir(result_path)[0].endswith('.zip') is True:
                     with ZipFile(os.path.join(result_path,os.listdir(result_path)[0]),'r') as zip:
