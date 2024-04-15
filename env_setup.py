@@ -6,7 +6,7 @@ from urllib3 import PoolManager,request
 from download_kaggle_dataset import download
 from zipfile import ZipFile
 
-def setup(repo_path:str,nb_name:str,runtime:str,parent_path=None):
+def setup(repo_path:str,nb_name:str,runtime:str):
     '''
     Python script to perform Google Colab/Jupyter Notebook environment setup tasks
     like downloading of datasets from source specified in config, 
@@ -35,15 +35,16 @@ def setup(repo_path:str,nb_name:str,runtime:str,parent_path=None):
     # else if connected to python runtime and executing a .py script, if os='linux' (chromeos), parent_path = '/mnt/chromeos/GoogleDrive/MyDrive' 
     # else if connected to python runtime and executing a .py script, if os='linux', parent_path = '~/GDrive'
     # else if connected to python runtime and executing a .py script, if os='linux' and Google Drive is not mounted ie. repo is located in local directory, parent_path = '~'
-    if runtime=='python-script' and pltfrm == 'linux':
-        if os.path.exists('/mnt/chromeos'):
-            parent_path=os.path.join('/mnt','chromeos','GoogleDrive','MyDrive')
-        elif os.path.exists(os.path.join(os.path.expanduser('~'),'GDrive'))==True:
-            parent_path=os.path.join(os.path.expanduser('~'),'GDrive')
-        else:
-            parent_path=os.path.expanduser('~')
+    # if runtime=='python-script' and pltfrm == 'linux':
+    #     if os.path.exists('/mnt/chromeos'):
+    #         parent_path=os.path.join('/mnt','chromeos','GoogleDrive','MyDrive')
+    #     elif os.path.exists(os.path.join(os.path.expanduser('~'),'GDrive'))==True:
+    #         parent_path=os.path.join(os.path.expanduser('~'),'GDrive')
+    #     else:
+    #         parent_path=os.path.expanduser('~')
     
-    repo_abs_path = os.path.join(parent_path,repo_path)
+    #repo_abs_path = os.path.join(parent_path,repo_path)
+    repo_abs_path=repo_path
 
     
     # Read the config.yaml
@@ -74,7 +75,7 @@ def setup(repo_path:str,nb_name:str,runtime:str,parent_path=None):
                 result_path=download(data_src_path=data_src_path,colab=False,repo_path=repo_abs_path,nb_name=nb_name)
     elif data_src_type=='direct-download':
         if os.path.isfile(os.path.join('/content','data',data_src_path.split('/')[-1])) is False or \
-        os.path.isfile(os.path.join(repo_abs_path,'data',data_src_path.split('/')[-1])) is False:
+        os.path.isfile(os.path.join(repo_abs_path,'data',nb_name,data_src_path.split('/')[-1])) is False:
             http = PoolManager()
             download_response=http.request('GET',data_src_path)
         if runtime=='colab':
