@@ -2,22 +2,20 @@ import os
 import platform
 from subprocess import run,CalledProcessError
 import yaml
-from urllib3 import PoolManager,request
+from urllib3 import PoolManager
 from download_kaggle_dataset import download
 from zipfile import ZipFile
 
-def setup(repo_path:str,nb_name:str,runtime:str):
+def setup(repo_path:str,nb_name:str):
     '''
     Python script to perform Google Colab/Jupyter Notebook environment setup tasks
     like downloading of datasets from source specified in config, 
     handling output formats (html, py:percent).
     
     Arguments:
-    repo_path:str : Local git repository name which will be joined with its parent_path,
+    repo_path:str : Relative path of the local git repository name which will be joined with its parent_path,
     nb_name:str : Currently active Colab/Jupyter Notebook
-    runtime:str : Currently active runtime type. Can be either 'colab','jupyter','python-script'
-    parent_path:str : Parent path of the git repo which will be joined with repo_path
-
+    
     Returns:str : result_path is the directory where data is downloaded
     '''
     # Check if OS is 'Linux', 'Windows' or 'OSX'
@@ -29,22 +27,30 @@ def setup(repo_path:str,nb_name:str,runtime:str):
         pltfrm='osx'
        
 
-    # Set parent path
-    # if connected to colab runtime, parent_path = '/content/drive/MyDrive'
-    # if connected to local jupyter runtime, parent_path = '/mnt..'
-    # else if connected to python runtime and executing a .py script, if os='linux' (chromeos), parent_path = '/mnt/chromeos/GoogleDrive/MyDrive' 
-    # else if connected to python runtime and executing a .py script, if os='linux', parent_path = '~/GDrive'
-    # else if connected to python runtime and executing a .py script, if os='linux' and Google Drive is not mounted ie. repo is located in local directory, parent_path = '~'
-    # if runtime=='python-script' and pltfrm == 'linux':
-    #     if os.path.exists('/mnt/chromeos'):
-    #         parent_path=os.path.join('/mnt','chromeos','GoogleDrive','MyDrive')
-    #     elif os.path.exists(os.path.join(os.path.expanduser('~'),'GDrive'))==True:
-    #         parent_path=os.path.join(os.path.expanduser('~'),'GDrive')
-    #     else:
-    #         parent_path=os.path.expanduser('~')
+    # Detect currently active runtime and set parent_path
+    try:
+        if get_ipython().__class__.__module__=='google.colab._shell':
+            runtime='colab'
+            parent_path=os.path.join('/content','drive','MyDrive')
+        elif get_ipython().__class__.__module__=='ipykernel.zmqshell':
+            runtime='jupyter'
+            parent_path=os.getcwd()
+    except NameError as ne:
+        print('Running as .py Script and not as .ipynb Notebook')
+        runtime='python-script'
+        if pltfrm=='linux':
+            if os.path.exists('/mnt/chromeos'):
+                parent_path=os.path.join('/mnt','chromeos','GoogleDrive','MyDrive')
+            elif os.path.exists(os.path.join(os.path.expanduser('~'),'GDrive')) is True:
+                parent_path=os.path.join(os.path.expanduser('~'),'GDrive')
+            else:
+                parent_path=os.path.expanduser('~')
+
+    if repo_path.startswith('.'):
+        repo_path=repo_path.replace('./','',1)
     
-    #repo_abs_path = os.path.join(parent_path,repo_path)
-    repo_abs_path=repo_path
+    repo_abs_path=os.path.join(parent_path,repo_path)
+
 
     
     # Read the config.yaml
