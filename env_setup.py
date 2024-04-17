@@ -19,37 +19,28 @@ def setup(repo_path:str,nb_name:str):
     Returns:str : result_path is the directory where data is downloaded
     '''
     # Check if OS is 'Linux', 'Windows' or 'OSX'
-    if platform.system()=='Linux':
-        pltfrm='linux'
-    elif platform.system()=='Windows':
-        pltfrm='windows'
-    elif platform.system()=='Darwin':
-        pltfrm='osx'
+    # if platform.system()=='Linux':
+    #     pltfrm='linux'
+    # elif platform.system()=='Windows':
+    #     pltfrm='windows'
+    # elif platform.system()=='Darwin':
+    #     pltfrm='osx'
        
 
-    # Detect currently active runtime and set parent_path
+    # Detect currently active runtime
     try:
         if get_ipython().__class__.__module__=='google.colab._shell':
             runtime='colab'
-            parent_path=os.path.join('/content','drive','MyDrive')
         elif get_ipython().__class__.__module__=='ipykernel.zmqshell':
             runtime='jupyter'
-            parent_path=os.getcwd()
     except NameError as ne:
         print('Running as .py Script and not as .ipynb Notebook')
         runtime='python-script'
-        if pltfrm=='linux':
-            if os.path.exists('/mnt/chromeos'):
-                parent_path=os.path.join('/mnt','chromeos','GoogleDrive','MyDrive')
-            elif os.path.exists(os.path.join(os.path.expanduser('~'),'GDrive')) is True:
-                parent_path=os.path.join(os.path.expanduser('~'),'GDrive')
-            else:
-                parent_path=os.path.expanduser('~')
 
     if repo_path.startswith('.'):
         repo_path=repo_path.replace('./','',1)
     
-    repo_abs_path=os.path.join(parent_path,repo_path)
+    repo_abs_path=os.path.join(os.getcwd(),repo_path)
 
 
     
