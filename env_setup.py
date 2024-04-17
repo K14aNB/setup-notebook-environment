@@ -1,5 +1,5 @@
 import os
-import platform
+import errno
 from subprocess import run,CalledProcessError
 import yaml
 from urllib3 import PoolManager
@@ -45,11 +45,15 @@ def setup(repo_path:str,nb_name:str):
 
     
     # Read the config.yaml
-    with open(os.path.join(repo_abs_path,'configs','config.yaml')) as f:
+    try:
+        with open(os.path.join(repo_abs_path,'configs','config.yaml')) as f:
             try:
                 config_details = yaml.safe_load(f)
             except yaml.YAMLError as ex:
                 print(ex)
+    except FileNotFoundError as fnf:
+        print(fnf)
+        print('config.yaml not found in repo')
                     
     # Data
     data=config_details['data']
