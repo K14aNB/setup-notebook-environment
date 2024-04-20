@@ -1,5 +1,4 @@
 import os
-import errno
 from subprocess import run,CalledProcessError
 import yaml
 from urllib3 import PoolManager
@@ -56,14 +55,15 @@ def setup(repo_path:str,nb_name:str):
         print('config.yaml not found in repo')
                     
     # Data
-    data=config_details['data']
-    data_src=data.get(nb_name)
-    data_src_type=data_src.get('source')
-    data_src_path=data_src.get('data-src-path')
+    data=config_details[nb_name].get('data')
+    data_src_type=data[0].get('source')
+    data_src_path=data[1].get('data-src-path')
 
     # Outputs
-    outputs=config_details['outputs']
-    nb_outputs=outputs.get(nb_name)
+    outputs=config_details[nb_name].get('outputs')
+    nb_html_preview=outputs[0].get('nb-html-preview')
+    py_percent_script=outputs[1].get('py-percent-script')
+    output_path=outputs[2].get('output-path')
 
     # Set up Data
     result_path=''
@@ -105,14 +105,14 @@ def setup(repo_path:str,nb_name:str):
    # Handling Outputs
 
     if runtime in ['colab','jupyter']:
-        if nb_outputs.get('nb-html-preview') == 'true':
+        if nb_html_preview == 'true':
             # Converting the notebook to HTML output format for preview in GitHub
             try:
-                run(['jupyter','nbconvert','--to','html',os.path.join(repo_abs_path,nb_outputs.get('output-path'),nb_name+'.ipynb')],check=True)
+                run(['jupyter','nbconvert','--to','html',os.path.join(repo_abs_path,output_path,nb_name+'.ipynb')],check=True)
             except CalledProcessError as e1:
                 print(f'{e1.cmd} failed')
                 
-        if nb_outputs.get('py-percent-script') == 'true':
+        if py_percent_script == 'true':
             # Try importing jupytext. If not installed in colab VM, install the module.
             try:
                 __import__('jupytext')
@@ -124,11 +124,11 @@ def setup(repo_path:str,nb_name:str):
             
             # Converting the notebook to py:percent script format
             try:
-                run(['jupytext','--to','py:percent',os.path.join(repo_abs_path,nb_outputs.get('output-path'),nb_name+'.ipynb')],check=True)
+                run(['jupytext','--to','py:percent',os.path.join(repo_abs_path,output_path,nb_name+'.ipynb')],check=True)
             except CalledProcessError as e3:
                 print(f'{e3.cmd} failed')
 
-            py_filename = os.path.join(repo_abs_path,nb_outputs.get('output-path'),nb_name+'.py')
+            py_filename = os.path.join(repo_abs_path,output_path,nb_name+'.py')
             # Check if jupytext config file does not exist in colab VM, create it.
             # This jupytext config file is essential for clearing cell metadata added by colab
             try:
