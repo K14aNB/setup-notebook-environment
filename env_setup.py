@@ -55,12 +55,13 @@ def setup(repo_path:str,nb_name:str):
         print('config.yaml not found in repo')
                     
     # Data
-    data=config_details[nb_name].get('data')
+    notebooks=config_details['notebooks']
+    data=notebooks[nb_name].get('data')
     data_src_type=data[0].get('source')
     data_src_path=data[1].get('data-src-path')
 
     # Outputs
-    outputs=config_details[nb_name].get('outputs')
+    outputs=notebooks[nb_name].get('outputs')
     nb_html_preview=outputs[0].get('nb-html-preview')
     py_percent_script=outputs[1].get('py-percent-script')
     output_path=outputs[2].get('output-path')
