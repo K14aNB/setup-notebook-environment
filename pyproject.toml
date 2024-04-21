@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "env-setup"
+name = "env_setup"
 version = "0.1.0"
 description = "Python script to perform Google Colab/Jupyter Notebook environment setup tasks"
 authors = ["K14aNB"]
