@@ -70,7 +70,7 @@ def setup(repo_path:str,nb_name:str):
     result_path=''
     if data_src_type=='kaggle-datasets':
         if runtime=='colab':
-            if os.path.isdir('/content/data') is False or os.listdir(os.path.join('/content,data'))==[]:
+            if os.path.isdir('/content/data') is False or os.listdir(os.path.join('/content','data'))==[]:
                 result_path=download(data_src_path=data_src_path,colab=True)               
         elif runtime in ['jupyter','python-script']:
             if os.path.isdir(os.path.join(repo_abs_path,'data',nb_name)) is False or os.listdir(os.path.join(repo_abs_path,'data',nb_name))==[]:
