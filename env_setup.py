@@ -70,37 +70,43 @@ def setup(repo_path:str,nb_name:str):
     result_path=''
     if data_src_type=='kaggle-datasets':
         if runtime=='colab':
-            if os.path.isdir('/content/data') is False or os.listdir(os.path.join('/content','data'))==[]:
-                result_path=download(data_src_path=data_src_path,colab=True)               
+            if os.path.isdir('/content/data') is True and len(os.listdir(os.path.join('/content','data')))>0:
+                result_path='/content/data'
+            else:
+                result_path=download(data_src_path=data_src_path,colab=True)
         elif runtime in ['jupyter','python-script']:
-            if os.path.isdir(os.path.join(repo_abs_path,'data',nb_name)) is False or os.listdir(os.path.join(repo_abs_path,'data',nb_name))==[]:
+            if os.path.isdir(os.path.join(repo_abs_path,'data',nb_name)) is True and len(os.listdir(os.path.join(repo_abs_path,'data',nb_name)))>0:
+                result_path=os.path.join(repo_abs_path,'data',nb_name)
+            else:
                 result_path=download(data_src_path=data_src_path,colab=False,repo_path=repo_abs_path,nb_name=nb_name)
     elif data_src_type=='direct-download':
-        if os.path.isfile(os.path.join('/content','data',data_src_path.split('/')[-1])) is False or \
-        os.path.isfile(os.path.join(repo_abs_path,'data',nb_name,data_src_path.split('/')[-1])) is False:
+        if runtime=='colab' and os.path.isfile(os.path.join('/content','data',data_src_path.split('/')[-1])) is True:
+            result_path='/content/data'
+        elif runtime in ['jupyter','python-script'] and os.path.isfile(os.path.join(repo_abs_path,'data',nb_name,data_src_path.split('/')[-1])) is True:
+            result_path=os.path.join(repo_abs_path,'data',nb_name)
+        else:
             http = PoolManager()
             download_response=http.request('GET',data_src_path)
-        if runtime=='colab':
-            result_path='/content/data'
-            if os.path.isdir(result_path) is False:
-                os.mkdir(result_path)
+            if runtime=='colab':
+                result_path='/content/data'
+                if os.path.isdir(result_path) is False:
+                    os.mkdir(result_path)
+                    if download_response.status==200:
+                        with open(os.path.join(result_path,data_src_path.split('/')[-1]),'w') as d:
+                            d.write(download_response.data.decode('utf-8'))
+                        if os.listdir(result_path)[0].endswith('.zip') is True:
+                            with ZipFile(os.path.join(result_path,os.listdir(result_path)[0]),'r') as zip:
+                                zip.extractall(path=result_path)
+            elif runtime in ['jupyter','python-script']:
+                result_path=os.path.join(repo_abs_path,'data',nb_name)
+                if os.path.isdir(result_path) is False:
+                    os.makedirs(result_path)
                 if download_response.status==200:
-                    with open(os.path.join(result_path,data_src_path.split('/')[-1]),'w') as d:
-                        d.write(download_response.data.decode('utf-8'))
+                    with open(os.path.join(result_path,data_src_path.split('/')[-1]),'w') as dl:
+                        dl.write(download_response.data.decode('utf-8'))
                     if os.listdir(result_path)[0].endswith('.zip') is True:
                         with ZipFile(os.path.join(result_path,os.listdir(result_path)[0]),'r') as zip:
                             zip.extractall(path=result_path)
-            
-        elif runtime in ['jupyter','python-script']:
-            result_path=os.path.join(repo_abs_path,'data',nb_name)
-            if os.path.isdir(result_path) is False:
-                os.makedirs(result_path)
-            if download_response.status==200:
-                with open(os.path.join(result_path,data_src_path.split('/')[-1]),'w') as dl:
-                    dl.write(download_response.data.decode('utf-8'))
-                if os.listdir(result_path)[0].endswith('.zip') is True:
-                    with ZipFile(os.path.join(result_path,os.listdir(result_path)[0]),'r') as zip:
-                        zip.extractall(path=result_path)
 
 
    # Handling Outputs
