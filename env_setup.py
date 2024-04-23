@@ -40,7 +40,7 @@ def setup(repo_name:str,nb_name:str):
 
     # Get parent path
     if runtime in ['google_colab','jupyter']:
-        parent_path='.'
+        parent_path=os.getcwd()
     elif runtime=='python-script' and pltfrm=='linux':
         if os.path.exists(os.path.join('/mnt','chromeos','GoogleDrive','MyDrive')):
             parent_path=os.path.join('/mnt','chromeos','GoogleDrive','MyDrive')
