@@ -49,6 +49,7 @@ def setup(repo_name:str,nb_name:str):
 
     
     # Get repo_path from repo_name
+    repo_path=''
     try:
         find_cmd_results=run(['find',parent_path,'-maxdepth','5','-name',repo_name,'-type','d'],capture_output=True,check=True)
         repo_path=find_cmd_results.stdout.decode('utf-8').replace('\n','',1)
