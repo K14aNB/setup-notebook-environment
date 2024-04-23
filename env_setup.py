@@ -39,8 +39,7 @@ def setup(repo_name:str,nb_name:str):
 
 
     # Get parent path
-    parent_path=''
-    if runtime in ['google_colab','jupyter']:
+    if runtime in ['colab','jupyter']:
         parent_path=os.getcwd()
     elif runtime=='python-script' and pltfrm=='linux':
         if os.path.exists(os.path.join('/mnt','chromeos','GoogleDrive','MyDrive')):
@@ -49,7 +48,6 @@ def setup(repo_name:str,nb_name:str):
 
     
     # Get repo_path from repo_name
-    repo_path=''
     try:
         find_cmd_results=run(['find',parent_path,'-maxdepth','5','-name',repo_name,'-type','d'],capture_output=True,check=True)
         repo_path=find_cmd_results.stdout.decode('utf-8').replace('\n','',1)
@@ -159,4 +157,4 @@ def setup(repo_name:str,nb_name:str):
             except CalledProcessError as e6:
                 print(f'{e6.cmd} failed')
     return result_path
-    
+
