@@ -98,14 +98,12 @@ def setup(repo_name:str,nb_name:str):
         elif runtime in ['jupyter','python-script'] and os.path.isfile(os.path.join(repo_path,'data',nb_name,data_src_path.split('/')[-1])) is True:
             result_path=os.path.join(repo_path,'data',nb_name)
         else:
-            # http = PoolManager()
-            # download_response=http.request('GET',data_src_path)
             if runtime=='colab':
                 result_path='/content/data'
                 if os.path.isdir(result_path) is False:
                     os.mkdir(result_path)
                     try:
-                        run(['wget','-P',result_path,data_src_path])
+                        run(['wget','-P',result_path,data_src_path],check=True)
                     except CalledProcessError as e3:
                         print(f'{e3.cmd} failed')
                         print('Download failed')
@@ -117,7 +115,7 @@ def setup(repo_name:str,nb_name:str):
                 if os.path.isdir(result_path) is False:
                     os.makedirs(result_path)
                     try:
-                        run(['wget','-P',result_path,data_src_path])
+                        run(['wget','-P',result_path,data_src_path],check=True)
                     except CalledProcessError as e4:
                         print(f'{e4.cmd} failed')
                         print('Download failed')
