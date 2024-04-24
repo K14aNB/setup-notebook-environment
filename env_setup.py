@@ -2,7 +2,6 @@ import os
 import platform
 from subprocess import run,CalledProcessError
 import yaml
-from urllib3 import PoolManager
 from download_kaggle_dataset import download
 from zipfile import ZipFile
 
@@ -99,25 +98,29 @@ def setup(repo_name:str,nb_name:str):
         elif runtime in ['jupyter','python-script'] and os.path.isfile(os.path.join(repo_path,'data',nb_name,data_src_path.split('/')[-1])) is True:
             result_path=os.path.join(repo_path,'data',nb_name)
         else:
-            http = PoolManager()
-            download_response=http.request('GET',data_src_path)
+            # http = PoolManager()
+            # download_response=http.request('GET',data_src_path)
             if runtime=='colab':
                 result_path='/content/data'
                 if os.path.isdir(result_path) is False:
                     os.mkdir(result_path)
-                    if download_response.status==200:
-                        with open(os.path.join(result_path,data_src_path.split('/')[-1]),'w') as d:
-                            d.write(download_response.data.decode('utf-8'))
-                        if os.listdir(result_path)[0].endswith('.zip') is True:
-                            with ZipFile(os.path.join(result_path,os.listdir(result_path)[0]),'r') as zip:
-                                zip.extractall(path=result_path)
+                    try:
+                        run(['wget','-P',result_path,data_src_path])
+                    except CalledProcessError as e3:
+                        print(f'{e3.cmd} failed')
+                        print('Download failed')
+                    if os.listdir(result_path)[0].endswith('.zip') is True:
+                        with ZipFile(os.path.join(result_path,os.listdir(result_path)[0]),'r') as zip:
+                            zip.extractall(path=result_path)
             elif runtime in ['jupyter','python-script']:
                 result_path=os.path.join(repo_path,'data',nb_name)
                 if os.path.isdir(result_path) is False:
                     os.makedirs(result_path)
-                if download_response.status==200:
-                    with open(os.path.join(result_path,data_src_path.split('/')[-1]),'w') as dl:
-                        dl.write(download_response.data.decode('utf-8'))
+                    try:
+                        run(['wget','-P',result_path,data_src_path])
+                    except CalledProcessError as e4:
+                        print(f'{e4.cmd} failed')
+                        print('Download failed')
                     if os.listdir(result_path)[0].endswith('.zip') is True:
                         with ZipFile(os.path.join(result_path,os.listdir(result_path)[0]),'r') as zip:
                             zip.extractall(path=result_path)
@@ -130,8 +133,8 @@ def setup(repo_name:str,nb_name:str):
             # Converting the notebook to HTML output format for preview in GitHub
             try:
                 run(['jupyter','nbconvert','--to','html',os.path.join(repo_path,output_path,nb_name+'.ipynb')],check=True)
-            except CalledProcessError as e3:
-                print(f'{e3.cmd} failed')
+            except CalledProcessError as e5:
+                print(f'{e5.cmd} failed')
                 
         if py_percent_script == 'true':
             # Try importing jupytext. If not installed in colab VM, install the module.
@@ -140,21 +143,21 @@ def setup(repo_name:str,nb_name:str):
             except ImportError:
                 try:
                     run(['python','-m','pip','install','jupytext','-q'],check=True)
-                except CalledProcessError as e4:
-                    print(f'{e4.cmd} failed')
+                except CalledProcessError as e6:
+                    print(f'{e6.cmd} failed')
             
             # Converting the notebook to py:percent script format
             try:
                 run(['jupytext','--to','py:percent',os.path.join(repo_path,output_path,nb_name+'.ipynb')],check=True)
-            except CalledProcessError as e5:
-                print(f'{e5.cmd} failed')
+            except CalledProcessError as e7:
+                print(f'{e7.cmd} failed')
 
             py_filename = os.path.join(repo_path,output_path,nb_name+'.py')
             # Check if jupytext config file does not exist in colab VM, create it.
             # This jupytext config file is essential for clearing cell metadata added by colab
             try:
                 run(['jupytext','--opt', 'cell_metadata_filter=-all',py_filename],check=True)
-            except CalledProcessError as e6:
-                print(f'{e6.cmd} failed')
+            except CalledProcessError as e8:
+                print(f'{e8.cmd} failed')
     return result_path
 
