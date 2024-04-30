@@ -2,6 +2,7 @@ import os
 import platform
 from subprocess import run,CalledProcessError
 import yaml
+import mlflow_setup
 from download_kaggle_dataset import download
 from zipfile import ZipFile
 
@@ -78,6 +79,20 @@ def setup(repo_name:str,nb_name:str):
     nb_html_preview=outputs[0].get('nb-html-preview')
     py_percent_script=outputs[1].get('py-percent-script')
     output_path=outputs[2].get('output-path')
+
+    # Check in config_details whether MLFlow needs to be set up
+    try:
+        mlflow=config_details['mlflow']
+        tracking_server=mlflow.get('tracking-server')
+        if tracking_server=='dagshub':  
+            repo_owner=tracking_server[0].get('repo-owner')
+            experiment_name=tracking_server[1].get('experiment-name')
+            dotenv_path=tracking_server[2].get('dotenv-path')
+            mlflow_setup.setup_with_dagshub(repo_owner=repo_owner,repo_name=repo_name,experiment_name=experiment_name,runtime=runtime,
+                dotenv_path=dotenv_path)
+    except KeyError as ke:
+        print('MLFlow config is not specified in config.yaml')
+
 
     # Set up Data
     result_path=''
