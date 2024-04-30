@@ -9,9 +9,8 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 PyYAML = "6.0.1"
-urllib3 = "2.2.1"
 download-kaggle-dataset = {git = "https://github.com/K14aNB/download-kaggle-dataset.git", rev = "main"}
-
+MLFlow-Setup = {git = "https://github.com/K14aNB/MLFlow-Setup.git", rev = "main"}
 
 [build-system]
 requires = ["poetry-core"]
