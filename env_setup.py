@@ -88,9 +88,7 @@ def setup(repo_name:str,nb_name:str):
             dagshub=mlflow.get('dagshub')  
             repo_owner=dagshub[0].get('repo-owner')
             experiment_name=dagshub[1].get('experiment-name')
-            dotenv_path=dagshub[2].get('dotenv-path')
-            mlflow_setup.setup_with_dagshub(repo_owner=repo_owner,repo_name=repo_name,experiment_name=experiment_name,runtime=runtime,
-                dotenv_path=dotenv_path)
+            mlflow_setup.setup_with_dagshub(repo_owner=repo_owner,repo_name=repo_name,experiment_name=experiment_name,runtime=runtime)
     except KeyError as ke:
         print('MLFlow config is not specified in config.yaml')
 
