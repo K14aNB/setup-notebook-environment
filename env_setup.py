@@ -3,7 +3,8 @@ import platform
 from subprocess import run,CalledProcessError
 import yaml
 import mlflow_setup
-from download_kaggle_dataset import download
+import download_kaggle_dataset
+import gcloud_bigquery_setup
 from zipfile import ZipFile
 
 def setup(repo_name:str,nb_name:str):
@@ -16,7 +17,11 @@ def setup(repo_name:str,nb_name:str):
     repo_name:str : Local git repository name
     nb_name:str : Currently active Colab/Jupyter Notebook
     
-    Returns:str : result_path is the directory where data is downloaded
+    Returns:tuple or str
+    if data source type is bigquery-public-data, 
+    then a tuple is returned. This tuple contains an instance of bigquery Client and a list of instances
+    of Dataset retrieved from respective dataset references.
+    else a string is returned. This string, result_path is the directory where data is downloaded
     '''
     # Check if OS is 'Linux', 'Windows' or 'OSX'
     if platform.system()=='Linux':
@@ -72,7 +77,15 @@ def setup(repo_name:str,nb_name:str):
     notebooks=config_details['notebooks']
     data=notebooks[nb_name].get('data')
     data_src_type=data[0].get('source')
-    data_src_path=data[1].get('data-src-path')
+    if data_src_type=='bigquery-public-data':
+        dataset_ids=data[1].get('dataset-ids')
+        client,datasets=gcloud_bigquery_setup.bqsetup(repo_name=repo_name,runtime=runtime,dataset_ids=dataset_ids,ds_project_id=data_src_type)
+        
+    elif data_src_type=='bigquery':
+        # TO DO
+        pass
+    else:
+        data_src_path=data[1].get('data-src-path')
 
     # Outputs
     outputs=notebooks[nb_name].get('outputs')
@@ -184,5 +197,9 @@ def setup(repo_name:str,nb_name:str):
                 run(['jupytext','--opt', 'cell_metadata_filter=-all',py_filename],check=True)
             except CalledProcessError as e8:
                 print(f'{e8.cmd} failed')
-    return result_path
+    
+    if data_src_type=='bigquery-public-data':
+        return client,datasets
+    else:
+        return result_path
 
