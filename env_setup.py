@@ -1,6 +1,7 @@
 import os
 import platform
 from subprocess import run,CalledProcessError
+from dotenv import get_key
 import yaml
 import mlflow_setup
 import download_kaggle_dataset
@@ -43,23 +44,28 @@ def setup(repo_name:str,nb_name:str):
         runtime='python-script'
 
 
-    # Get parent path
-    if runtime in ['colab','jupyter']:
+    # Get parent_path
+    if runtime=='colab':
         parent_path=os.getcwd()
-    elif runtime=='python-script' and pltfrm=='linux':
-        if os.path.exists(os.path.join('/mnt','chromeos','GoogleDrive','MyDrive')):
-            parent_path=os.path.join('/mnt','chromeos','GoogleDrive','MyDrive')
-        
 
+        # Get repo_path from repo_name
+        try:
+            find_cmd_results=run(['find',parent_path,'-maxdepth','5','-name',repo_name,'-type','d'],capture_output=True,check=True)
+            repo_path=find_cmd_results.stdout.decode('utf-8').replace('\n','',1)
+            print('Found the repo')
+        except CalledProcessError as e1:
+            print(f'{e1.cmd} failed')
+        except IndexError as e2:
+            print('Repo not found')
     
-    # Get repo_path from repo_name
-    try:
-        find_cmd_results=run(['find',parent_path,'-maxdepth','5','-name',repo_name,'-type','d'],capture_output=True,check=True)
-        repo_path=find_cmd_results.stdout.decode('utf-8').replace('\n','',1)
-    except CalledProcessError as e1:
-        print(f'{e1.cmd} failed')
-    except IndexError as e2:
-        print('Repo not found')
+    # Get repo_path from environment_variables
+    elif runtime in ['jupyter','python-script'] and pltfrm=='linux':
+        env_var='REPO_PATH'
+        if os.path.exists(os.path.join(os.path.expanduser('~'),'.env',repo_name,'environment_variables.env')):
+            if get_key(dotenv_path=os.path.join(os.path.expanduser('~'),'.env',repo_name,'environment_variables.env'),key_to_get=env_var,encoding='utf-8') is not None:
+                repo_path=get_key(dotenv_path=os.path.join(os.path.expanduser('~'),'.env',repo_name,'environment_variables.env'),key_to_get=env_var,encoding='utf-8')
+                if os.path.exists(repo_path):
+                    print('Found the repo')
 
     
     # Read the config.yaml
@@ -113,24 +119,24 @@ def setup(repo_name:str,nb_name:str):
             if os.path.isdir('/content/data') is True and len(os.listdir(os.path.join('/content','data')))>0:
                 result_path='/content/data'
             else:
-                result_path=download(data_src_path=data_src_path,colab=True,competition=False)
+                result_path=download_kaggle_dataset.download(data_src_path=data_src_path,colab=True,competition=False)
         elif runtime in ['jupyter','python-script']:
             if os.path.isdir(os.path.join(repo_path,'data',nb_name)) is True and len(os.listdir(os.path.join(repo_path,'data',nb_name)))>0:
                 result_path=os.path.join(repo_path,'data',nb_name)
             else:
-                result_path=download(data_src_path=data_src_path,colab=False,competition=False,repo_path=repo_path,nb_name=nb_name)
+                result_path=download_kaggle_dataset.download(data_src_path=data_src_path,colab=False,competition=False,repo_path=repo_path,nb_name=nb_name)
     
     elif data_src_type=='kaggle-competition':
         if runtime=='colab':
             if os.path.isdir('/content/data') is True and len(os.listdir(os.path.join('/content','data')))>0:
                 result_path='/content/data'
             else:
-                result_path=download(data_src_path=data_src_path,colab=True,competition=True)
+                result_path=download_kaggle_dataset.download(data_src_path=data_src_path,colab=True,competition=True)
         elif runtime in ['jupyter','python-script']:
             if os.path.isdir(os.path.join(repo_path,'data',nb_name)) is True and len(os.listdir(os.path.join(repo_path,'data',nb_name)))>0:
                 result_path=os.path.join(repo_path,'data',nb_name)
             else:
-                result_path=download(data_src_path=data_src_path,colab=False,competiton=True,repo_path=repo_path,nb_name=nb_name)
+                result_path=download_kaggle_dataset.download(data_src_path=data_src_path,colab=False,competiton=True,repo_path=repo_path,nb_name=nb_name)
     
     elif data_src_type=='direct-download':
         if runtime=='colab' and os.path.isfile(os.path.join('/content','data',data_src_path.split('/')[-1])) is True:
