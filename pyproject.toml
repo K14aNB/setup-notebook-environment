@@ -8,10 +8,11 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
+python-dotenv = "^1.0.1"
 PyYAML = "6.0.1"
-download_kaggle_dataset = {git = "https://github.com/K14aNB/download-kaggle-dataset.git", rev = "main"}
-mlflow_setup = {git = "https://github.com/K14aNB/mlflow-setup.git", rev = "main"}
-gcloud_bigquery_setup = {git = "https://github.com/K14aNB/gcloud-bigquery-setup.git", rev = "main"}
+download-kaggle-dataset = {git = "https://github.com/K14aNB/download-kaggle-dataset.git", rev = "main"}
+mlflow-setup = {git = "https://github.com/K14aNB/mlflow-setup.git", rev = "main"}
+gcloud-bigquery-setup = {git = "https://github.com/K14aNB/gcloud-bigquery-setup.git", rev = "main"}
 
 [build-system]
 requires = ["poetry-core"]
