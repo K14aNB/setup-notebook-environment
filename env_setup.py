@@ -136,7 +136,7 @@ def setup(repo_name:str,nb_name:str):
             if os.path.isdir(os.path.join(repo_path,'data',nb_name)) is True and len(os.listdir(os.path.join(repo_path,'data',nb_name)))>0:
                 result_path=os.path.join(repo_path,'data',nb_name)
             else:
-                result_path=download_kaggle_dataset.download(data_src_path=data_src_path,colab=False,competiton=True,repo_path=repo_path,nb_name=nb_name)
+                result_path=download_kaggle_dataset.download(data_src_path=data_src_path,colab=False,competition=True,repo_path=repo_path,nb_name=nb_name)
     
     elif data_src_type=='direct-download':
         if runtime=='colab' and os.path.isfile(os.path.join('/content','data',data_src_path.split('/')[-1])) is True:
