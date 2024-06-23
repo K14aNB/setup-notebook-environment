@@ -59,7 +59,7 @@ def setup(repo_name:str,nb_name:str):
             print('Repo not found')
     
     # Get repo_path from environment_variables
-    elif runtime in ['jupyter','python-script'] and pltfrm=='linux':
+    elif runtime in ['jupyter','python-script']:
         env_var='REPO_PATH'
         if os.path.exists(os.path.join(os.path.expanduser('~'),'.env',repo_name,'environment_variables.env')):
             if get_key(dotenv_path=os.path.join(os.path.expanduser('~'),'.env',repo_name,'environment_variables.env'),key_to_get=env_var,encoding='utf-8') is not None:
